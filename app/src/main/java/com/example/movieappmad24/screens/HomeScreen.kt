@@ -11,37 +11,43 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import com.example.movieappmad24.models.Movie
 import com.example.movieappmad24.models.MovieRow
-import com.example.movieappmad24.models.getMovies
+import com.example.movieappmad24.models.MoviesViewModel
 import com.example.movieappmad24.navigation.Screen
 import com.example.movieappmad24.widgets.SimpleBottomAppBar
 import com.example.movieappmad24.widgets.SimpleTopAppBar
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController, viewModel: MoviesViewModel) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = { SimpleTopAppBar(title = "Movie App") },
         bottomBar = { SimpleBottomAppBar(navController) }
     ) {
-            values -> MovieList(values = values, navController = navController)
+            values -> MovieList(movies = viewModel.movieList, values = values,
+                navController = navController,
+                onFavoriteClick = { movieId -> viewModel.toggleFavoriteMovie(movieId) }
+                )
     }
 }
 
 @Composable
 fun MovieList(
-    movies: List<Movie> = getMovies(),
+    movies: List<Movie>,
     values: PaddingValues,
-    navController: NavHostController
-) {
+    navController: NavHostController,
+    onFavoriteClick: (String) -> Unit = {},
+    ) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(values)
     ) {
         items(movies) {
-                movie -> MovieRow(movie) {movieId ->
-                    navController.navigate(route = Screen.Detail.route + "/$movieId")
-            }
+                movie -> MovieRow(
+                    movie = movie,
+                    onItemClick = {movieId -> navController.navigate(route = Screen.Detail.route + "/$movieId") },
+                    onFavoriteClick = onFavoriteClick
+                )
         }
     }
 }

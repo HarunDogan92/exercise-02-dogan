@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -20,7 +21,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,7 +37,7 @@ import coil.compose.AsyncImage
 
 
 @Composable
-fun MovieRow(movie: Movie, onItemClick: (String) -> Unit = {}){
+fun MovieRow(movie: Movie, onItemClick: (String) -> Unit = {}, onFavoriteClick: (String) -> Unit = {}){
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(5.dp)
@@ -54,14 +54,17 @@ fun MovieRow(movie: Movie, onItemClick: (String) -> Unit = {}){
         elevation = CardDefaults.cardElevation(10.dp)
     ) {
         Column {
-            MovieImageBox(movie)
+            MovieImageBox(movie, onFavoriteClick)
             MovieTextRow(movie)
         }
     }
 }
 
 @Composable
-fun MovieImageBox(movie: Movie) {
+fun MovieImageBox(movie: Movie, onFavoriteClick: (String) -> Unit) {
+    var isFavorite by remember {
+        mutableStateOf(movie.isFavorite)
+    }
     Box(
         modifier = Modifier
             .height(150.dp)
@@ -79,8 +82,12 @@ fun MovieImageBox(movie: Movie) {
             contentAlignment = Alignment.TopEnd
         ){
             Icon(
-                tint = MaterialTheme.colorScheme.secondary,
-                imageVector = Icons.Default.FavoriteBorder,
+                modifier = Modifier.clickable {
+                    onFavoriteClick(movie.id)
+                    isFavorite = !isFavorite
+                },
+                imageVector = if (isFavorite) Icons.Default.Favorite
+                else Icons.Default.FavoriteBorder,
                 contentDescription = "Add to favorites")
         }
     }

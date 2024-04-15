@@ -19,13 +19,11 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.movieappmad24.models.Movie
 import com.example.movieappmad24.models.MovieRow
-import com.example.movieappmad24.models.getMovies
+import com.example.movieappmad24.models.MoviesViewModel
 import com.example.movieappmad24.widgets.SimpleTopAppBar
 
 @Composable
-fun DetailScreen(movieId: String?, navController: NavHostController) {
-    val movies : List<Movie> = getMovies()
-    val movie : Movie? = movies.findLast { it.id == movieId }
+fun DetailScreen(movie: Movie?, navController: NavHostController, viewModel: MoviesViewModel) {
     if (movie != null) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -35,7 +33,7 @@ fun DetailScreen(movieId: String?, navController: NavHostController) {
                 Column(modifier = Modifier
                     .fillMaxSize()
                     .padding(values)) {
-                    MovieRow(movie)
+                    MovieRow(movie, onFavoriteClick = { movieId -> viewModel.toggleFavoriteMovie(movieId) })
                     MovieImages(movie)
                 }
         }
