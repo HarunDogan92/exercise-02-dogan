@@ -37,7 +37,7 @@ import coil.compose.AsyncImage
 
 
 @Composable
-fun MovieRow(movie: Movie, onItemClick: (String) -> Unit = {}, onFavoriteClick: (String) -> Unit = {}){
+fun MovieRow(movie: MovieWithImages, onItemClick: (String) -> Unit = {}, onFavoriteClick: (Movie) -> Unit = {}){
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(5.dp)
@@ -48,22 +48,22 @@ fun MovieRow(movie: Movie, onItemClick: (String) -> Unit = {}, onFavoriteClick: 
             )
         )
         .clickable {
-            onItemClick(movie.id)
+            onItemClick(movie.movie.id)
         },
         shape = ShapeDefaults.Large,
         elevation = CardDefaults.cardElevation(10.dp)
     ) {
         Column {
             MovieImageBox(movie, onFavoriteClick)
-            MovieTextRow(movie)
+            MovieTextRow(movie.movie)
         }
     }
 }
 
 @Composable
-fun MovieImageBox(movie: Movie, onFavoriteClick: (String) -> Unit) {
+fun MovieImageBox(movie: MovieWithImages, onFavoriteClick: (Movie) -> Unit) {
     var isFavorite by remember {
-        mutableStateOf(movie.isFavorite)
+        mutableStateOf(movie.movie.isFavorite)
     }
     Box(
         modifier = Modifier
@@ -72,7 +72,7 @@ fun MovieImageBox(movie: Movie, onFavoriteClick: (String) -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
-            model =  movie.images.get(2),
+            model =  movie.images.firstOrNull()?.url,
             contentScale = ContentScale.Crop,
             contentDescription = "placeholder image")
         Box(
@@ -83,7 +83,7 @@ fun MovieImageBox(movie: Movie, onFavoriteClick: (String) -> Unit) {
         ){
             Icon(
                 modifier = Modifier.clickable {
-                    onFavoriteClick(movie.id)
+                    onFavoriteClick(movie.movie)
                     isFavorite = !isFavorite
                 },
                 imageVector = if (isFavorite) Icons.Default.Favorite

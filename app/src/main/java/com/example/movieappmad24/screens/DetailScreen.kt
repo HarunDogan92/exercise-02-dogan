@@ -14,9 +14,11 @@ import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -26,34 +28,54 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.movieappmad24.data.MovieDatabase
+import com.example.movieappmad24.models.DetailViewModel
+import com.example.movieappmad24.models.DetailViewModelFactory
 import com.example.movieappmad24.models.Movie
+import com.example.movieappmad24.models.MovieImage
 import com.example.movieappmad24.models.MovieRow
-import com.example.movieappmad24.models.MoviesViewModel
+import com.example.movieappmad24.repos.MovieRepository
 import com.example.movieappmad24.widgets.SimpleTopAppBar
 
 @Composable
-fun DetailScreen(movie: Movie?, navController: NavHostController, viewModel: MoviesViewModel) {
-    if (movie != null) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = { SimpleTopAppBar(movie.title, navController) }
-        ) {
-            values ->
-                Column(modifier = Modifier
-                    .fillMaxSize()
-                    .padding(values)) {
-                    MovieRow(movie, onFavoriteClick = { movieId -> viewModel.toggleFavoriteMovie(movieId) })
-                    MoviePlayer(movie)
-                    MovieImages(movie)
+fun DetailScreen(backStackEntry: NavBackStackEntry, navController: NavHostController) {
+    val movieId = backStackEntry.arguments?.getString("movieId")
+    if (movieId != null) {
+        val db = MovieDatabase  .getDatabase(LocalContext.current, rememberCoroutineScope())
+        val repo = MovieRepository(movieDao = db.movieDao())
+        val factory = DetailViewModelFactory(repo, movieId)
+        val vm: DetailViewModel = viewModel(factory = factory)
+
+        val movie = vm.movieDetail.collectAsState().value
+        if (movie != null) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                topBar = { SimpleTopAppBar(movie.movie.title, navController) }
+            ) { values ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(values)
+                ) {
+                    MovieRow(
+                        movie,
+                        onFavoriteClick = { movie -> vm.toggleFavoriteMovie(movie) })
+                    MoviePlayer(movie.movie)
+                    MovieImages(movie.images)
                 }
+            }
+        } else {
+            Text("Movie not found")
         }
     } else {
-        Text("Movie not found")
+        Text("MovieId not found")
     }
 }
 
@@ -114,12 +136,12 @@ fun MoviePlayer(movie: Movie) {
 }
 
 @Composable
-fun MovieImages(movie: Movie) {
+fun MovieImages(movieImages: List<MovieImage>) {
     LazyRow(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        items(movie.images) { image ->
+        items(movieImages) { image ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -128,7 +150,7 @@ fun MovieImages(movie: Movie) {
                 elevation = CardDefaults.cardElevation(10.dp)
             ) {
                 AsyncImage(
-                    model = image,
+                    model = image.url,
                     contentScale = ContentScale.Fit,
                     contentDescription = "movie images"
                 )
